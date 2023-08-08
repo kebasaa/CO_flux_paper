@@ -1,30 +1,27 @@
 # Header ####
 rm(list = ls())
 library(ggplot2)
-library(GGally) # Comparing variables and data exploration
-library(mgcv) # Library to fit gams
-library(gratia) # Modern library for visualizing and assessing gams
+library(GGally)
+library(mgcv)
+library(gratia)
 library(dplyr)
 library(xtable)
 library(tibble)
-setwd('C:/Users/Jonathan/Documents/_research_statistics/2.6 - CO branch chambers/stats')
+setwd('./')
 
 # 0) Load data ####
 # - - - - - - - -
 
-input_folder = '../data/'
-graphs_path = '../graphs/'
+input_folder = './'
+graphs_path = './graphs/'
 
-df <- read.csv(paste0(input_folder,'all_data.csv'))
+df <- read.csv(paste0(input_folder,'data_full.csv'))
 df$timestamp = as.POSIXct(strptime(df$timestamp, '%Y-%m-%d %H:%M:%S'))
 
 # Initial data filtering
 df = df[which((df$timestamp >= '2020-09-01 00:00') & (df$timestamp < '2021-09-01 00:00')),]
 df = df[which(df$status == 'cc'),]
 df = df[which(!(df$rain %in% c('Post-rain', 'Rain'))),]
-
-#df$hamsin <- as.logical(df$hamsin)
-#df = df[which(df$hamsin == F),]
 
 worst_concurvity <- function(m){
   concurvity_matrix <- concurvity(m, full=F)$worst
@@ -58,13 +55,13 @@ r2_list <- function(model_list){
 
 names(df)
 
-#temp <- df[which(df$plot == 'irr'),]
 temp <- df
-temp = temp[which(temp$par.ambient.umol_m2_s1 > 50),]
-temp = temp[which(temp$temp.leaf.current.chamber.c < 45),]
-temp = temp[which(temp$flux.h2o.ch_oc.proj_la.mmol_m2_s >= 0),]
+temp = temp[which(temp$PAR > 50),]
+temp = temp[which(temp$TL < 45),]
+temp = temp[which(temp$Tr >= 0),]
 
 # Rename columns
+# PAR, TL, Tr, VPD, SWC
 names(temp)[names(temp) == 'flux.co.ch_oc.proj_la.nmol_m2_s'] <- 'co.flux'
 names(temp)[names(temp) == 'flux.h2o.ch_oc.proj_la.mmol_m2_s'] <- 'h2o.flux'
 names(temp)[names(temp) == 'flux.co2.ch_oc.proj_la.umol_m2_s1'] <- 'co2.flux'
