@@ -3,9 +3,9 @@
 
 # CO Flux article
 
-The code in this repository is complementary to the article "Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions". The following files are available:
+The code in this repository is complementary to the article "*Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*". The following files are available:
 
-1. data_full.csv: Gas flux data of H<sub>2</sub>O, CO<sub>2</sub>, and CO, calculated from concentrations measured using the Aerodyne Mini-TILDAS OCS/COS Monitor QCL Laser (https://www.aerodyne.com/wp-content/uploads/2021/11/OCS_COS.pdf). Calculation of fluxes was done according to the [Laser-chamber-fluxes Python scripts](https://github.com/kebasaa/Laser-chamber-fluxes).
+1. **data_full.csv:** Gas flux data of H<sub>2</sub>O, CO<sub>2</sub>, and CO, calculated from concentrations measured using the Aerodyne Mini-TILDAS OCS/COS Monitor QCL Laser (https://www.aerodyne.com/wp-content/uploads/2021/11/OCS_COS.pdf). Calculation of fluxes was done according to the [Laser-chamber-fluxes Python scripts](https://github.com/kebasaa/Laser-chamber-fluxes).
 2. **01_CO_figures.ipynb:** Used to create figures for the main article and supplement. Dependencies are:
     - Pandas
     - Numpy
