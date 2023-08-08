@@ -15,7 +15,7 @@ The code in this repository is complementary to the article "*Unveiling the Infl
 
 ## How to Cite
 
-Muller et al. (2023). Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions. DOI: 10.5281/zenodo.4117838  (URL:
+Muller et al. (2023). *Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*. DOI: XYZ  (URL:
 <https://doi.org/10.5281/zenodo.4117838>), Python notebook
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4117838.svg)](https://doi.org/10.5281/zenodo.4117838)
