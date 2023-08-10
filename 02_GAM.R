@@ -12,7 +12,7 @@ setwd('./')
 # 0) Load data ####
 # - - - - - - - -
 
-input_folder = 'C:/Users/Jonathan/Documents/GitHub/CO_flux_paper/'
+input_folder = './'
 graphs_path = './graphs/'
 
 worst_concurvity <- function(m){
