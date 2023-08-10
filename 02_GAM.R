@@ -12,16 +12,8 @@ setwd('./')
 # 0) Load data ####
 # - - - - - - - -
 
-input_folder = './'
+input_folder = 'C:/Users/Jonathan/Documents/GitHub/CO_flux_paper/'
 graphs_path = './graphs/'
-
-df <- read.csv(paste0(input_folder,'data_full.csv'))
-df$timestamp = as.POSIXct(strptime(df$timestamp, '%Y-%m-%d %H:%M:%S'))
-
-# Initial data filtering
-df = df[which((df$timestamp >= '2020-09-01 00:00') & (df$timestamp < '2021-09-01 00:00')),]
-df = df[which(df$status == 'cc'),]
-df = df[which(!(df$rain %in% c('Post-rain', 'Rain'))),]
 
 worst_concurvity <- function(m){
   concurvity_matrix <- concurvity(m, full=F)$worst
@@ -49,34 +41,26 @@ r2_list <- function(model_list){
   return(r2_list)
 }
 
-# 1) Preparing data ####
-# - - - - - - - - - - - -
-# https://towardsdatascience.com/producing-insights-with-generalized-additive-models-gams-cf2b68b1b847
+# 1) Load & prepare data ####
+# - - - - - - - - - - - - - -
 
+df <- read.csv(paste0(input_folder,'data_full.csv'))
+df$timestamp = as.POSIXct(strptime(df$timestamp, '%Y-%m-%d %H:%M:%S'))
 names(df)
 
 temp <- df
-temp = temp[which(temp$PAR > 50),]
+# Select daytime from above-canopy PAR
+temp = temp[which(temp$PAR_above_canopy > 50),]
+# Exclude CO flux, leaf temperature and transpiration outliers
 temp = temp[which(temp$TL < 45),]
 temp = temp[which(temp$Tr >= 0),]
+temp = temp[which(temp$co.flux > -10),]
 
-# Rename columns
-# PAR, TL, Tr, VPD, SWC
-names(temp)[names(temp) == 'flux.co.ch_oc.proj_la.nmol_m2_s'] <- 'co.flux'
-names(temp)[names(temp) == 'flux.h2o.ch_oc.proj_la.mmol_m2_s'] <- 'h2o.flux'
-names(temp)[names(temp) == 'flux.co2.ch_oc.proj_la.umol_m2_s1'] <- 'co2.flux'
-names(temp)[names(temp) == 'par.current.chamber.umol_m2_s1'] <- 'par'
-names(temp)[names(temp) == 'temp.leaf.current.chamber.c'] <- 't.leaf'
-names(temp)[names(temp) == 'VPD.Pa'] <- 'vpd'
-names(temp)[names(temp) == 'swc_10_30cm'] <- 'swc'
-
-temp$plot = as.factor(temp$plot)
+temp$treatment = as.factor(temp$treatment)
 temp$season = as.factor(temp$season)
 
-temp = temp[complete.cases(temp[,c('co.flux', 'h2o.flux', 'par', 't.leaf', 'swc')]),]
-
-# Remove outliers
-temp = temp[which(temp$co.flux > -10),]
+# Remove incomplete rows as the GAM can't be estimated otherwise
+temp = temp[complete.cases(temp[,c('co.flux', 'Tr', 'PAR', 'TL', 'SWC')]),]
 
 temp$time <- as.numeric(strftime(temp$timestamp, '%H')) + as.numeric(strftime(temp$timestamp, '%M'))/60
 temp$doy <- as.numeric(strftime(temp$timestamp, '%j'))
@@ -84,15 +68,10 @@ temp$doy <- as.numeric(strftime(temp$timestamp, '%j'))
 # 2) Data exploration ####
 # - - - - - - - - - - - -
 
-# ggpairs(temp %>% select(c(co.flux, h2o.flux, par, t.leaf, vpd, swc))) +
-#   labs(subtitle = "Numeric variable exploration") +
-#   theme_bw()
-
-plt <- ggpairs(temp %>% select(c(co.flux, h2o.flux, par, t.leaf, vpd, swc)),
+plt <- ggpairs(temp %>% select(c(co.flux, Tr, PAR, TL, VPD, SWC)),
                columnLabels = c('CO~flux', 'Tr', 'PAR', 'T[L]', 'VPD', 'SWC'), labeller='label_parsed',
                lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1), 
                             combo = wrap("dot", alpha = 0.4,            size=0.2) )) +
-  #labs(subtitle = "Numeric variable exploration") +
   theme_bw() + 
   theme(text=element_text(family="serif"), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust=1))
 plt
@@ -100,22 +79,20 @@ ggsave(paste0(graphs_path, 'pairs.jpg'), width=18, height=18, units = "cm", dpi 
 ggsave(paste0(graphs_path, 'pairs.pdf'), width=18, height=18, units = "cm", dpi = 600)
 
 
-plt <- ggpairs(temp[which(temp$plot == 'irr'),] %>% select(c(co.flux, h2o.flux, par, t.leaf, vpd, swc)),
+plt <- ggpairs(temp[which(temp$treatment == 'Irrigated'),] %>% select(c(co.flux, Tr, PAR, TL, VPD, SWC)),
                columnLabels = c('CO~flux', 'Tr', 'PAR', 'T[L]', 'VPD', 'SWC'), labeller='label_parsed',
                lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1), 
                             combo = wrap("dot", alpha = 0.4,            size=0.2) )) +
-  #labs(subtitle = "Numeric variable exploration") +
   theme_bw() +
   ggtitle('Irrigated') + 
   theme(text=element_text(family="serif"), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust=1))
 plt
 ggsave(paste0(graphs_path, 'pairs_irr.jpg'), width=18, height=18, units = "cm", dpi = 600)
 
-plt <- ggpairs(temp[which(temp$plot == 'ctr'),] %>% select(c(co.flux, h2o.flux, par, t.leaf, vpd, swc)),
+plt <- ggpairs(temp[which(temp$treatment == 'Droughted'),] %>% select(c(co.flux, Tr, PAR, TL, VPD, SWC)),
                columnLabels = c('CO~flux', 'Tr', 'PAR', 'T[L]', 'VPD', 'SWC'), labeller='label_parsed',
                lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1), 
                             combo = wrap("dot", alpha = 0.4,            size=0.2) )) +
-  #labs(subtitle = "Numeric variable exploration") +
   theme_bw() +
   ggtitle('Droughted') + 
   theme(text=element_text(family="serif"), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust=1))
@@ -124,16 +101,18 @@ ggsave(paste0(graphs_path, 'pairs_ctr.jpg'), width=18, height=18, units = "cm", 
 
 # 3) GAMs ####
 # - - - - - - 
+# For tutorials on GAMs, check:
 # https://noamross.github.io/gams-in-r-course/chapter2
+# https://towardsdatascience.com/producing-insights-with-generalized-additive-models-gams-cf2b68b1b847
 
 # Leaf T and PAR
-m0 <- gam(co.flux ~ s(par, by=plot) + s(t.leaf, by=plot) + plot, data=temp, method='REML')
-m1 <- gam(co.flux ~ s(par) + s(t.leaf), data=temp, method='REML')
-#m1 <- gam(co.flux ~ s(par, k=3) + s(t.leaf), data=temp, method='REML', family=scat(link="identity"))
+m0 <- gam(co.flux ~ s(PAR, by=treatment) + s(TL, by=treatment) + treatment, data=temp, method='REML')
+m1 <- gam(co.flux ~ s(PAR) + s(TL), data=temp, method='REML')
+#m1 <- gam(co.flux ~ s(PAR, k=3) + s(TL), data=temp, method='REML', family=scat(link="identity")) # Test T-distribution
 
 # Adding transpiration to m0 & m1
-m2 <- gam(co.flux ~ s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m3 <- gam(co.flux ~ s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+m2 <- gam(co.flux ~ s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m3 <- gam(co.flux ~ s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
 # Adding SWC to m2 is significant in gam.check(), so shouldn't be done
 # Adding SWC to m3: same problem
@@ -142,66 +121,65 @@ m3 <- gam(co.flux ~ s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', 
 # Add VPD to m3: VPD is significant in gam.check()
 
 # Add interactions:
-# Adding to m2 & m3: PAR with t.leaf
-m4 <- gam(co.flux ~ ti(par, t.leaf, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m5 <- gam(co.flux ~ ti(par, t.leaf) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# Adding to m2 & m3: PAR with TL
+m4 <- gam(co.flux ~ ti(PAR, TL, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m5 <- gam(co.flux ~ ti(PAR, TL) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
-# Adding to m2 & m3: PAR with h2o.flux
-m6 <- gam(co.flux ~ ti(par, h2o.flux, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m7 <- gam(co.flux ~ ti(par, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# Adding to m2 & m3: PAR with Tr
+m6 <- gam(co.flux ~ ti(PAR, Tr, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m7 <- gam(co.flux ~ ti(PAR, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
-# Adding to m2 & m3: t.leaf with h2o.flux
-m8 <- gam(co.flux ~ ti(t.leaf, h2o.flux, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m9 <- gam(co.flux ~ ti(t.leaf, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# Adding to m2 & m3: TL with Tr
+m8 <- gam(co.flux ~ ti(TL, Tr, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m9 <- gam(co.flux ~ ti(TL, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
-# Adding to m2 & m3: t.leaf with h2o.flux, removing PAR
-m10 <- gam(co.flux ~ ti(t.leaf, h2o.flux, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m11 <- gam(co.flux ~ ti(t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# Adding to m2 & m3: TL with Tr, removing PAR
+m10 <- gam(co.flux ~ ti(TL, Tr, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m11 <- gam(co.flux ~ ti(TL, Tr) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
-# Adding to m8 & m9: swc is significant in gam.check()
-# Any interaction with swc is significant in gam.check()
+# Adding to m8 & m9: SWC is significant in gam.check()
+# Any interaction with SWC is significant in gam.check()
 
-# Adding to m8 & m9: t.leaf with vpd
-m12 <- gam(co.flux ~ ti(t.leaf, vpd, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m13 <- gam(co.flux ~ ti(t.leaf, vpd) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
-# Adding to m8 & m9: h2o.flux with vpd
-m14 <- gam(co.flux ~ ti(h2o.flux, vpd, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m15 <- gam(co.flux ~ ti(h2o.flux, vpd, k=3) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# Adding to m8 & m9: TL with VPD
+m12 <- gam(co.flux ~ ti(TL, VPD, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m13 <- gam(co.flux ~ ti(TL, VPD) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
+# Adding to m8 & m9: Tr with VPD
+m14 <- gam(co.flux ~ ti(Tr, VPD, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m15 <- gam(co.flux ~ ti(Tr, VPD, k=3) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
 # Add 3-way interactions:
-# m2 & m3 with interaction of PAR, t.leaf and h2o.flux
-m16 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot), data=temp, method='REML', select=T)
-m17 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# m2 & m3 with interaction of PAR, TL and Tr
+m16 <- gam(co.flux ~ ti(PAR, TL, Tr, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment), data=temp, method='REML', select=T)
+m17 <- gam(co.flux ~ ti(PAR, TL, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
-# m2 & m3 with interaction of PAR, t.leaf and h2o.flux, removing PAR (only increases AIC slightly)
-m18 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m19 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+# m2 & m3 with interaction of PAR, TL and Tr, removing PAR (only increases AIC slightly)
+m18 <- gam(co.flux ~ ti(PAR, TL, Tr, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m19 <- gam(co.flux ~ ti(PAR, TL, Tr) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 
 # Other interactions
-# m8 & m9 with interaction of vPD, t.leaf and h2o.flux
-m20 <- gam(co.flux ~ ti(vpd, t.leaf, h2o.flux, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + s(par, by=plot) + plot, data=temp, method='REML', select=T)
-m21 <- gam(co.flux ~ ti(vpd, t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux) + s(par), data=temp, method='REML', select=T)
+# m8 & m9 with interaction of VPD, TL and Tr
+m20 <- gam(co.flux ~ ti(VPD, TL, Tr, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + s(PAR, by=treatment) + treatment, data=temp, method='REML', select=T)
+m21 <- gam(co.flux ~ ti(VPD, TL, Tr) + s(TL) + s(Tr) + s(PAR), data=temp, method='REML', select=T)
 
-# m8 & m9, with VPD instead of t.leaf
-m22 <- gam(co.flux ~ ti(vpd, h2o.flux, by=plot) + s(par, by=plot) + s(vpd, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m23 <- gam(co.flux ~ ti(vpd, h2o.flux) + s(par) + s(vpd) + s(h2o.flux), data=temp, method='REML', select=T)
+# m8 & m9, with VPD instead of TL
+m22 <- gam(co.flux ~ ti(VPD, Tr, by=treatment) + s(PAR, by=treatment) + s(VPD, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m23 <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(VPD) + s(Tr), data=temp, method='REML', select=T)
 
-# m8 & m9, with VPD instead of t.leaf, except in the s()
-m24 <- gam(co.flux ~ ti(vpd, h2o.flux, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot) + plot, data=temp, method='REML', select=T)
-m25 <- gam(co.flux ~ ti(vpd, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux, k=3), data=temp, method='REML', select=T)
+# m8 & m9, with VPD instead of TL, except in the s()
+m24 <- gam(co.flux ~ ti(VPD, Tr, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment) + treatment, data=temp, method='REML', select=T)
+m25 <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp, method='REML', select=T)
 
 # Final model: m27
-temp <- temp[which(temp$h2o.flux >= 0),]
-m26 <- gam(co.flux ~ ti(vpd, h2o.flux, k=4, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot), data=temp, method='REML', select=T)
-m27 <- gam(co.flux ~ ti(vpd, h2o.flux, k=4) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T)
+m26 <- gam(co.flux ~ ti(VPD, Tr, k=4, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment), data=temp, method='REML', select=T)
+m27 <- gam(co.flux ~ ti(VPD, Tr, k=4) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T)
 summary(m27)
 gam.check(m27, rep=500)
 plot(m27, scheme = 1, pages=1, too.far = 0.05)
-vis.gam(m27, view = c('vpd','h2o.flux'), plot.type = "contour", too.far = 0.05)
+vis.gam(m27, view = c('VPD','Tr'), plot.type = "contour", too.far = 0.05)
 
 # All
 comparison_df <- AIC(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16,
-                     m17, m18, m19, m20, m21, m22, m23, m24, m25, m26,m27)
+                     m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27)
 comparison_df <- rownames_to_column(comparison_df)
 names(comparison_df)[names(comparison_df) == 'rowname'] <- 'model'
 comparison_df$interact <- 0
@@ -253,20 +231,20 @@ comparison_df
 
 # 4a) Latex table ####
 # - - - - - - - - - - -
-m1 <- gam(co.flux ~ s(par) + s(t.leaf), data=temp, method='REML') # m1
-m2 <- gam(co.flux ~ s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m3
-m3 <- gam(co.flux ~ ti(par, t.leaf) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m5
-m4 <- gam(co.flux ~ ti(par, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m7
-m5 <- gam(co.flux ~ ti(t.leaf, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m9
-m6 <- gam(co.flux ~ ti(t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m11
-m7 <- gam(co.flux ~ ti(t.leaf, vpd) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m13
-m8 <- gam(co.flux ~ ti(h2o.flux, vpd, k=3) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m15 
-m9 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m17
-m10 <- gam(co.flux ~ ti(par, t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux), data=temp, method='REML', select=T) # m19
-m11 <- gam(co.flux ~ ti(vpd, t.leaf, h2o.flux) + s(t.leaf) + s(h2o.flux) + s(par), data=temp, method='REML', select=T) # m21
-m12 <- gam(co.flux ~ ti(vpd, h2o.flux) + s(par) + s(t.leaf) + s(h2o.flux, k=3), data=temp, method='REML', select=T) # m25
-m13 <- gam(co.flux ~ ti(vpd, h2o.flux, k=4, by=plot) + s(par, by=plot) + s(t.leaf, by=plot) + s(h2o.flux, by=plot), data=temp, method='REML', select=T) # m26
-m14 <- gam(co.flux ~ ti(vpd, h2o.flux) + s(par) + s(t.leaf), data=temp, method='REML', select=T)
+m1 <- gam(co.flux ~ s(PAR) + s(TL), data=temp, method='REML') # m1
+m2 <- gam(co.flux ~ s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m3
+m3 <- gam(co.flux ~ ti(PAR, TL) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m5
+m4 <- gam(co.flux ~ ti(PAR, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m7
+m5 <- gam(co.flux ~ ti(TL, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m9
+m6 <- gam(co.flux ~ ti(TL, Tr) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m11
+m7 <- gam(co.flux ~ ti(TL, VPD) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m13
+m8 <- gam(co.flux ~ ti(Tr, VPD, k=3) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m15 
+m9 <- gam(co.flux ~ ti(PAR, TL, Tr) + s(PAR) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m17
+m10 <- gam(co.flux ~ ti(PAR, TL, Tr) + s(TL) + s(Tr), data=temp, method='REML', select=T) # m19
+m11 <- gam(co.flux ~ ti(VPD, TL, Tr) + s(TL) + s(Tr) + s(PAR), data=temp, method='REML', select=T) # m21
+m12 <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp, method='REML', select=T) # m25
+m13 <- gam(co.flux ~ ti(VPD, Tr, k=4, by=treatment) + s(PAR, by=treatment) + s(TL, by=treatment) + s(Tr, by=treatment), data=temp, method='REML', select=T) # m26
+m14 <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL), data=temp, method='REML', select=T)
 # Create model comparison after renaming
 comparison_df <- AIC(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14)
 comparison_df <- rownames_to_column(comparison_df)
@@ -288,17 +266,11 @@ print.xtable(xtable(comparison_df, digits=c(0,0,2,0,0,2,2)), file = paste0(graph
 # 5) Final model diagnostics plots ####
 # - - - - - - - - - - - - - - - - - - -
 
-temp2 <- temp
-# Rename columns
-names(temp2)[names(temp2) == 'vpd']      <- 'VPD'
-names(temp2)[names(temp2) == 'h2o.flux'] <- 'Tr'
-names(temp2)[names(temp2) == 'par']      <- 'PAR'
-names(temp2)[names(temp2) == 't.leaf']   <- 'TL'
 # Run model
-m_final <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL), data=temp2,
+m_final <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL), data=temp,
                method='REML', select=T)
-#m_final <- gam(co.flux ~ ti(TL, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp2,
-#               method='REML', select=T)
+#m_final <- gam(co.flux ~ ti(TL, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp,
+#               method='REML', select=T) # Alternative with additive Tr
 summary(m_final)
 gam.check(m_final)
 
@@ -326,7 +298,7 @@ plt = plt + theme(plot.title = element_text(hjust = 0.5),
 hist_plot <- plt
 
 # Response
-plot_df <- data.frame(Fitted_Values = fitted(m_final), Observed_Response = temp[which(!is.na(temp$vpd)),]$co.flux)
+plot_df <- data.frame(Fitted_Values = fitted(m_final), Observed_Response = temp[which(!is.na(temp$VPD)),]$co.flux)
 plt = ggplot(plot_df, aes(x = Fitted_Values, y = Observed_Response))
 plt = plt + geom_point(color = "black", alpha = 0.25, size=0.25)
 plt = plt + geom_abline(slope = 1, intercept = 0, color = "#808080", linetype = "dashed")
@@ -451,7 +423,7 @@ dev.off()
 
 # 5b) Plots of parameter interactions ####
 # - - - - - - - - - - - - - - - - - - - - 
-# m_final <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp2,
+# m_final <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp,
 #                method='REML', select=T)
 
 plot_width      <- 8 # cm
@@ -501,77 +473,3 @@ vis.gam(m_final, view = c('Tr','PAR'), plot.type = "contour", too.far = 0.05,
         family='serif', mgp=c(1.2,0.4,0), main='(d) Tr vs. PAR')
 
 dev.off()
-
-# TESTS ####
-# - - - - - -
-
-# Need to bin co flux data, then check again
-temp2 <- temp2 %>%
-  mutate(co_bin = cut_width(co.flux, width = 0.1, center = 0, labels=F))
-temp3 <- temp2 %>%
-  group_by(co_bin) %>%
-  summarise(
-    co.flux = median(co.flux),
-    TL = median(TL),
-    Tr = median(Tr),
-    PAR = median(PAR)
-  )
-hist(temp3$co.flux)
-
-mX <- gam(co.flux ~ ti(TL, Tr) + s(sqrt(PAR)) + s(sqrt(TL)) + s(sqrt(Tr)), data=temp3,
-          method='REML', select=T)#, family=scat(link="identity"))
-summary(mX)
-gam.check(mX)
-plot(mX, pages = 1, scheme = 1)
-vis.gam(mX, view = c('TL','Tr'), plot.type = "contour", too.far = 0.05,
-        family='serif', mgp=c(1.2,0.4,0))
-AIC(mX)
-
-mX <- gam(co.flux ~ s(par) + s(t.leaf) + s(h2o.flux) + ti(par, co2.flux) + s(co2.flux), data=temp, method='REML', select=T, family=scat(link="identity"))
-summary(mX)
-gam.check(mX)
-plot(mX, pages = 1, scheme = 1)
-
-library(MASS)
-boxcox(lm(temp2$co.flux ~ 1))
-
-# # Load required libraries
-library(e1071)
-# library(ggplot2)
-
-# Function to calculate skewness and kurtosis for each variable
-calculate_skew_kurt <- function(x) {
-  skewness_value <- skewness(x)
-  kurtosis_value <- kurtosis(x)
-  return(data.frame(Skewness = skewness_value, Kurtosis = kurtosis_value))
-}
-
-# Calculate skewness and kurtosis for each variable
-skew_kurt_results <- lapply(temp3[,c('co.flux','Tr','PAR','TL')], calculate_skew_kurt)
-
-# Print the results
-print(skew_kurt_results)
-# 
-# # Function to create histograms for each variable
-# create_histogram <- function(x) {
-#   ggplot(data.frame(x = x), aes(x)) +
-#     geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
-#     labs(title = paste("Histogram of", names(x)),
-#          x = "Value",
-#          y = "Frequency") +
-#     theme_minimal()
-# }
-# 
-# # Create histograms for each variable
-# histograms <- lapply(df, create_histogram)
-# 
-# # Print the histograms
-# print(histograms)
-
-
-
-# Testing T distribution for heavy-tailed data:
-# m_final <- gam(co.flux ~ ti(VPD, Tr) + s(PAR) + s(TL) + s(Tr, k=3), data=temp2,
-#                method='REML', select=T, family=scat(link="identity"))
-# summary(m_final)
-# gam.check(m_final)
