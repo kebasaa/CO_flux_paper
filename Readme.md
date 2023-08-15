@@ -22,7 +22,7 @@ The code in this repository is complementary to the article "*Unveiling the Infl
     - PAR_above_canopy: PAR above canopy, in μmol m<sup>-2</sup> s<sup>-1</sup>
 	- TL: Leaf temperature, in °C
 	- TA: Air temperature, in °C
-	- VPD: Vapour pressure deficit, in Pandas
+	- VPD: Vapour pressure deficit, in Pa
 	- SWC: Soil water content, averaged from 10-30cm depth, in %
 2. **01_CO_figures.ipynb:** Used to create figures for the main article and supplement. Dependencies are:
     - [Pandas](https://pandas.pydata.org/)
