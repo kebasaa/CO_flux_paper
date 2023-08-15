@@ -4,7 +4,7 @@
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 
 
-[![DOI:10.1111/pce.14571](http://img.shields.io/badge/DOI-10.1111/pce.14571-B31B1B.svg)](https://doi.org/10.1111/pce.14571)
+[![DOI:10.1111/pce.14571](http://img.shields.io/badge/DOI-10.1111/pce.14571-a7d37d.svg)](https://doi.org/10.1111/pce.14571)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 # CO Flux article
@@ -24,7 +24,7 @@ The code in this repository is complementary to the article "*Unveiling the Infl
 
 Muller et al. (2023). *Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*. DOI: XYZ
 
-[![DOI:10.1111/pce.14571](http://img.shields.io/badge/DOI-10.1111/pce.14571-B31B1B.svg)](https://doi.org/10.1111/pce.14571)
+[![DOI:10.1111/pce.14571](http://img.shields.io/badge/DOI-10.1111/pce.14571-a7d37d.svg)](https://doi.org/10.1111/pce.14571)
 
 ## License
 
