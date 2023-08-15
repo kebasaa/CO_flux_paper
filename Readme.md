@@ -7,16 +7,16 @@ The code in this repository is complementary to the article "*Unveiling the Infl
 
 1. **data_full.csv:** Gas flux data of H<sub>2</sub>O, CO<sub>2</sub>, and CO, calculated from concentrations measured using the Aerodyne Mini-TILDAS OCS/COS Monitor QCL Laser (https://www.aerodyne.com/wp-content/uploads/2021/11/OCS_COS.pdf). Calculation of fluxes was done according to the [Laser-chamber-fluxes Python scripts](https://github.com/kebasaa/Laser-chamber-fluxes).
 2. **01_CO_figures.ipynb:** Used to create figures for the main article and supplement. Dependencies are:
-    - Pandas
-    - Numpy
-    - Plotnine & Mizani
+    - [Pandas](https://pandas.pydata.org/)
+    - [Numpy](https://numpy.org/)
+    - [Plotnine](https://plotnine.readthedocs.io/en/stable/) & [Mizani](https://plotnine.readthedocs.io/en/stable/tutorials/miscellaneous-manipulating-date-breaks-and-date-labels.html)
 3. **02_GAM.R:** Generalised Additive Model development
-    - mgcv
+    - [mgcv](https://cran.r-project.org/web/packages/mgcv/index.html)
+	- [ggplot2](https://ggplot2.tidyverse.org/)
 
 ## How to Cite
 
-Muller et al. (2023). *Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*. DOI: XYZ  (URL:
-<https://doi.org/10.5281/zenodo.4117838>), Python notebook
+Muller et al. (2023). *Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*. DOI: XYZ
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4117838.svg)](https://doi.org/10.5281/zenodo.4117838)
 
