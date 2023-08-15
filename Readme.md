@@ -16,10 +16,10 @@ The code in this repository is complementary to the article "*Unveiling the Infl
 	- season: Defined according to [Alpert et al. (2004)](https://doi.org/10.1002/joc.1037)
 	- treatment: Droughted & Irrigated
 	- co.flux: Carbon monoxide flux, in nmol m<sup>-2</sup> s<sup>-1</sup>
-	- co2.flux: CO<sub>2</sub> flux, in umol m<sup>-2</sup> s<sup>-1</sup>
+	- co2.flux: CO<sub>2</sub> flux, in μmol m<sup>-2</sup> s<sup>-1</sup>
 	- Tr: Transpiration flux, in mmol m<sup>-2</sup> s<sup>-1</sup>
-	- PAR: Photosynthetically active radiation at the chamber, in umol m<sup>-2</sup> s<sup>-1</sup>
-    - PAR_above_canopy: PAR above canopy, in umol m<sup>-2</sup> s<sup>-1</sup>
+	- PAR: Photosynthetically active radiation at the chamber, in μmol m<sup>-2</sup> s<sup>-1</sup>
+    - PAR_above_canopy: PAR above canopy, in μmol m<sup>-2</sup> s<sup>-1</sup>
 	- TL: Leaf temperature, in °C
 	- TA: Air temperature, in °C
 	- VPD: Vapour pressure deficit, in Pandas
