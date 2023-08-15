@@ -12,18 +12,18 @@
 The code in this repository is complementary to the article "*Unveiling the Influence of Drought and Heat on Leaf Carbon Monoxide Emissions*". The following files are available:
 
 1. **data_full.csv:** Gas flux data of H<sub>2</sub>O, CO<sub>2</sub>, and CO, calculated from concentrations measured using the Aerodyne Mini-TILDAS OCS/COS Monitor QCL Laser ([Link to manual](https://www.aerodyne.com/wp-content/uploads/2021/11/OCS_COS.pdf)). Calculation of fluxes was done according to the [Laser-chamber-fluxes Python scripts](https://github.com/kebasaa/Laser-chamber-fluxes). Contains the following variables:
-    - timestamp: Formatted as YYYY-mm-dd HH:MM:SS
-	- season: Defined according to [Alpert et al. (2004)](https://doi.org/10.1002/joc.1037)
-	- treatment: Droughted & Irrigated
-	- co.flux: Carbon monoxide flux, in nmol m<sup>-2</sup> s<sup>-1</sup>
-	- co2.flux: CO<sub>2</sub> flux, in μmol m<sup>-2</sup> s<sup>-1</sup>
-	- Tr: Transpiration flux, in mmol m<sup>-2</sup> s<sup>-1</sup>
-	- PAR: Photosynthetically active radiation at the chamber, in μmol m<sup>-2</sup> s<sup>-1</sup>
-    - PAR_above_canopy: PAR above canopy, in μmol m<sup>-2</sup> s<sup>-1</sup>
-	- TL: Leaf temperature, in °C
-	- TA: Air temperature, in °C
-	- VPD: Vapour pressure deficit, in Pa
-	- SWC: Soil water content, averaged from 10-30cm depth, in %
+    - _timestamp_: Formatted as YYYY-mm-dd HH:MM:SS
+	- _season_: Defined according to [Alpert et al. (2004)](https://doi.org/10.1002/joc.1037)
+	- _treatment_: Droughted & Irrigated
+	- _co.flux_: Carbon monoxide flux, in nmol m<sup>-2</sup> s<sup>-1</sup>
+	- _co2.flux_: CO<sub>2</sub> flux, in μmol m<sup>-2</sup> s<sup>-1</sup>
+	- _Tr_: Transpiration flux, in mmol m<sup>-2</sup> s<sup>-1</sup>
+	- _PAR_: Photosynthetically active radiation at the chamber, in μmol m<sup>-2</sup> s<sup>-1</sup>
+    - _PAR_above_canopy_: PAR above canopy, in μmol m<sup>-2</sup> s<sup>-1</sup>
+	- _TL_: Leaf temperature, in °C
+	- _TA_: Air temperature, in °C
+	- _VPD_: Vapour pressure deficit, in Pa
+	- _SWC_: Soil water content, averaged from 10-30cm depth, in %
 2. **01_CO_figures.ipynb:** Used to create figures for the main article and supplement. Dependencies are:
     - [Pandas](https://pandas.pydata.org/)
     - [Numpy](https://numpy.org/)
