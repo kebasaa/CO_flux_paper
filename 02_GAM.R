@@ -130,24 +130,6 @@ visreg3 <- function(mod, xvar, by, data, minrange=0.25, maxrange=0.75){
 df <- read.csv(paste0(input_folder,'all_summarised_daily.csv'))
 
 temp <- df
-#temp = temp[which(temp$flux.h2o.ch_oc.mmol_m2_s >= 0),] # NEWLY REMOVED 20 MAY 2024
-
-# Direction of flux
-# temp$dir <- 'emission'
-# temp[which(temp$flux.co.ch_oc.nmol_m2_s < 0.0),]$dir <- 'uptake'
-# temp$dir <- factor(temp$dir)
-
-# Rename columns
-names(temp)[names(temp) == 'flux.co.ch_oc.nmol_m2_s']        <- 'co.flux'
-names(temp)[names(temp) == 'flux.h2o.ch_oc.mmol_m2_s']       <- 'Tr'
-names(temp)[names(temp) == 'flux.co2.ch_oc.umol_m2_s1']      <- 'co2.flux'
-names(temp)[names(temp) == 'conc.h2o.mmol_mol.oc']           <- 'H2O'
-names(temp)[names(temp) == 'par.current.chamber.umol_m2_s1'] <- 'PAR'
-names(temp)[names(temp) == 'temp.leaf.current.chamber.c.oc'] <- 'TL'
-names(temp)[names(temp) == 'VPD.Pa.oc']                      <- 'VPD'
-names(temp)[names(temp) == 'swc_mean']                       <- 'swc'
-names(temp)[names(temp) == 'conc_ci.co.nmol_mol']            <- 'COi'
-names(temp)[names(temp) == 'conc_ci.h2o.mmol_mol']           <- 'H2Oi'
 
 temp = temp[complete.cases(temp[,c('co.flux', 'Tr', 'PAR', 'TL', 'VPD')]),]
 temp$timestamp <- as.POSIXct(strptime(temp$timestamp, format='%Y-%m-%d'))
@@ -155,7 +137,7 @@ temp$timestamp <- as.POSIXct(strptime(temp$timestamp, format='%Y-%m-%d'))
 # 2) Data exploration ####
 # - - - - - - - - - - - -
 
-plt <- ggpairs(temp %>% select(c(co.flux, Tr, PAR, TL, VPD, swc, g_tCO, COi)),
+plt <- ggpairs(temp %>% select(c(co.flux, Tr, PAR, TL, VPD, SWC, g_tCO, co.ci)),
                columnLabels = c('f[CO]', 'Tr', 'PAR', 'T[L]', 'VPD', 'SWC', 'g["t,CO"]', 'c["CO,i"]'), labeller='label_parsed',
                lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1), 
                             combo = wrap("dot", alpha = 0.4,            size=0.2) ),
@@ -166,49 +148,12 @@ plt <- ggpairs(temp %>% select(c(co.flux, Tr, PAR, TL, VPD, swc, g_tCO, COi)),
   theme(text=element_text(family="serif"), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust=1))
 plt = plt + scale_colour_manual(values=cbPalette) + scale_fill_manual(values=cbPalette)
 plt
-ggsave(paste0(graphs_path, 'pairs_summarised.jpg'), width=18, height=18, units = "cm", dpi = 600)
-ggsave(paste0(graphs_path, 'pairs_summarised.pdf'), width=18, height=18, units = "cm", dpi = 600)
+ggsave(paste0(graphs_path, 'FigS7_1.jpg'), width=18, height=18, units = "cm", dpi = 600)
+ggsave(paste0(graphs_path, 'FigS7_1.pdf'), width=18, height=18, units = "cm", dpi = 600)
 
 # 3) GAMs ####
 # - - - - - - 
 # https://noamross.github.io/gams-in-r-course/chapter2
-
-# Prep
-# temp2 <- temp
-# temp2$treatment <- as.factor(temp2$treatment)
-# temp2$season <- as.factor(temp2$season)
-
-testing_dataset <- temp
-testing_dataset$treatment <- as.factor(testing_dataset$treatment)
-testing_dataset$season <- as.factor(testing_dataset$season)
-
-#testing_dataset <- temp2
-testing_dataset$prob <- ''
-testing_dataset[which((testing_dataset$VPD > 2000) & (testing_dataset$co.flux < -0.5) & (testing_dataset$treatment == 'irr')),]$prob  <- 'b' #'bad irr'
-testing_dataset[which((testing_dataset$co.flux < -0.7) & (testing_dataset$treatment == 'irr')),]$prob  <- 'b' #'bad irr'
-
-testing_dataset <- testing_dataset[which(testing_dataset$prob != 'b'),]
-
-testing_dataset[which(testing_dataset$COi < 0),]$COi <- NA
-
-mX <- gam(co.flux ~ s(PAR, by=treatment, k=4) + te(TL, Tr, by=treatment) + treatment,
-          data=testing_dataset, method='REML', select=T)
-AIC(mX)
-summary(mX)
-concurvity(mX, full=F)$worst
-#plot(mX)
-
-plt <- ggpairs(testing_dataset %>% select(c(co.flux, Tr, PAR, TL, VPD, swc, g_tCO, COi)),
-               columnLabels = c('CO~flux', 'Tr', 'PAR', 'T[L]', 'VPD', 'SWC', 'g["t,CO"]', 'CO~int.'), labeller='label_parsed',
-               lower = list(continuous = wrap("points", alpha = 0.3,    size=0.1), 
-                            combo = wrap("dot", alpha = 0.4,            size=0.2) ),
-               ggplot2::aes(colour = testing_dataset$treatment),
-               upper = list(continuous = wrap("cor", size = 2.5))) +
-  #labs(subtitle = "Numeric variable exploration") +
-  theme_bw() + 
-  theme(text=element_text(family="serif"), axis.text.x = element_text(angle = -90, vjust = 0.5, hjust=1))
-plt = plt + scale_colour_manual(values=cbPalette) + scale_fill_manual(values=cbPalette)
-plt
 
 # Production & transport in 2 models!
 m_coi <- gam(COi ~ s(TL, k=4, by=treatment) + s(PAR, k=4, by=treatment) + treatment, # Production GOOD
