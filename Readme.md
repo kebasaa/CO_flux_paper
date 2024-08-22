@@ -7,7 +7,7 @@
 [![DOI:10.1111/pce.00000](http://img.shields.io/badge/DOI-10.1111/pce.00000-a7d37d.svg)](https://doi.org/10.1111/pce.00000)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-# CO Flux article
+# Data & code for article on leaf CO fluxes
 
 The code in this repository is complementary to the article "*Leaf carbon monoxide emissions and its stress response to drought, heat, and light intensity*". The following files are available:
 
@@ -36,7 +36,7 @@ The code in this repository is complementary to the article "*Leaf carbon monoxi
 
 ## How to Cite
 
-Muller et al. (2023). *Leaf carbon monoxide emissions and its stress response to drought, heat, and light intensity*. DOI: XYZ
+Muller et al. (2024). *Leaf carbon monoxide emissions and its stress response to drought, heat, and light intensity*. DOI: XYZ
 
 [![DOI:10.1111/pce.00000](http://img.shields.io/badge/DOI-10.1111/pce.00000-a7d37d.svg)](https://doi.org/10.1111/pce.00000)
 
