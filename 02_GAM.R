@@ -9,6 +9,8 @@ library(dplyr)
 library(tidyr)
 library(xtable)
 library(tibble)
+library(ggpubr)
+library(cowplot)
 setwd('./')
 
 # 0) Load data ####
@@ -218,8 +220,6 @@ ggsave(paste0(graphs_path, 'model3c_output_interaction_H2Oi_Tr.jpg'), width=8, h
 ggsave(paste0(graphs_path, 'model3c_output_interaction_H2Oi_Tr.pdf'), width=8, height=8, units = "cm", dpi = 1200)
 
 # Combine plots
-library(ggpubr)
-library(cowplot)
 
 legend <- get_legend(plt_cof_irr)
 plt_cof_irr2 <- plt_cof_irr + theme(legend.position = "none")
