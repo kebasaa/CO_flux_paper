@@ -4,12 +4,12 @@
 ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
 
 
-[![DOI:10.1111/nph.00000](http://img.shields.io/badge/DOI-10.1111/nph.00000-a7d37d.svg)](https://doi.org/10.1111/nph.00000)
+[![DOI:10.1111/nph.20424](http://img.shields.io/badge/DOI-10.1111/nph.20424-a7d37d.svg)](https://doi.org/10.1111/nph.20424)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 # Data & code for article on leaf CO fluxes
 
-The code in this repository is complementary to the article in New Phytologist titled "*Leaf carbon monoxide emissions under different drought, heat, and light conditions in the field*" (Muller et al., 2024). The following files are available:
+The code in this repository is complementary to the article in New Phytologist titled "*Leaf carbon monoxide emissions under different drought, heat, and light conditions in the field*" (Muller et al., 2025). The following files are available:
 
 1. **data_full.csv:** Gas flux data of H<sub>2</sub>O, CO<sub>2</sub>, and CO, calculated from concentrations measured using the Aerodyne Mini-TILDAS OCS/COS Monitor QCL Laser ([Link to manual](https://www.aerodyne.com/wp-content/uploads/2021/11/OCS_COS.pdf)). Calculation of fluxes was done according to the [Laser-chamber-fluxes Python scripts](https://github.com/kebasaa/Laser-chamber-fluxes). Contains the following variables:
     - _timestamp_: Formatted as YYYY-mm-dd HH:MM:SS
@@ -36,9 +36,9 @@ The code in this repository is complementary to the article in New Phytologist t
 
 ## How to Cite
 
-Muller et al. (2024). *Leaf carbon monoxide emissions under different drought, heat, and light conditions in the field*. New Phytologist. DOI: _to be assigned_
+Muller et al. (2025). *Leaf carbon monoxide emissions under different drought, heat, and light conditions in the field*. New Phytologist. DOI: https://doi.org/10.1111/nph.20424
 
-[![DOI:10.1111/nph.00000](http://img.shields.io/badge/DOI-10.1111/nph.00000-a7d37d.svg)](https://doi.org/10.1111/nph.00000)
+[![DOI:10.1111/nph.20424](http://img.shields.io/badge/DOI-10.1111/nph.20424-a7d37d.svg)](https://doi.org/10.1111/nph.20424)
 
 ## License
 
